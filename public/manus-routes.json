@@ -1,0 +1,23 @@
+{
+  "routes": [
+    { "path": "/", "title": "MAPORA — Spatial Intelligence", "access": "public" },
+    { "path": "/login", "title": "Sign in — MAPORA", "access": "public" },
+    { "path": "/dashboard", "title": "Overview — MAPORA", "access": "workspace" },
+    { "path": "/projects", "title": "My Projects — MAPORA", "access": "workspace" },
+    { "path": "/projects/new", "title": "New Mapping — MAPORA", "access": "workspace" },
+    { "path": "/projects/:id", "title": "Project Overview — MAPORA", "access": "workspace" },
+    { "path": "/projects/:id/upload", "title": "Upload Walkthrough — MAPORA", "access": "workspace" },
+    { "path": "/projects/:id/processing", "title": "Mapping Status — MAPORA", "access": "workspace" },
+    { "path": "/projects/:id/floor-plan", "title": "Floor Plan Editor — MAPORA", "access": "workspace" },
+    { "path": "/projects/:id/3d", "title": "3D Viewer — MAPORA", "access": "workspace" },
+    { "path": "/settings", "title": "Settings — MAPORA", "access": "workspace" },
+    { "path": "/admin", "title": "Admin Analytics — MAPORA", "access": "admin" },
+    { "path": "/app", "redirectTo": "/dashboard" },
+    { "path": "/app/new", "redirectTo": "/projects/new" },
+    { "path": "/app/projects", "redirectTo": "/projects" },
+    { "path": "/app/settings", "redirectTo": "/settings" },
+    { "path": "/app/project/:id", "redirectTo": "/projects/:id/floor-plan" },
+    { "path": "/app/project/:id/processing", "redirectTo": "/projects/:id/processing" },
+    { "path": "/app/project/:id/3d", "redirectTo": "/projects/:id/3d" }
+  ]
+}
