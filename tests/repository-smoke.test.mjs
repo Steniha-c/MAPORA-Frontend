@@ -2,8 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile, readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const root = new URL('../', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../', import.meta.url));
 
 test('production build is independently installable and emits JS/CSS assets', async () => {
   const html = await readFile(join(root, 'dist/index.html'), 'utf8');
@@ -33,3 +34,4 @@ test('homepage visual assets are present and non-empty', async () => {
     assert.ok(info.isFile() && info.size > 10_000, `${name} is present and non-empty`);
   }
 });
+
