@@ -62,7 +62,7 @@ function DemoRoom3D({ wire, selectedRoom, onSelect }: { wire: boolean; selectedR
       {/* 1. Ground Architectural Base Slab */}
       <mesh receiveShadow position={[0, -0.04, 0]}>
         <boxGeometry args={[11.8, 0.08, 7.8]} />
-        <meshStandardMaterial color="#f0f1f5" roughness={0.85} metalness={0.02} wireframe={wire} />
+        <meshStandardMaterial color="#f2f4f7" roughness={0.88} metalness={0.01} wireframe={wire} />
       </mesh>
 
       {/* Interactive Room Picking Floor Zones */}
@@ -71,119 +71,125 @@ function DemoRoom3D({ wire, selectedRoom, onSelect }: { wire: boolean; selectedR
       ))}
 
       {/* 2. FRONT EXTERIOR WALLS (Z = 3.8) */}
-      {/* Front-left corner */}
-      <ArchWall pos={[-5.2, 0.69, 3.8]} size={[1.2, 1.38, 0.2]} wire={wire} />
-      {/* Living Room Window (Double-pane with center mullion) */}
-      <ArchWall pos={[-3.8, 0.19, 3.8]} size={[1.6, 0.38, 0.2]} wire={wire} />
-      <ArchWall pos={[-3.8, 1.28, 3.8]} size={[1.6, 0.20, 0.2]} wire={wire} />
-      <ArchWall pos={[-3.8, 0.73, 3.8]} size={[0.04, 0.90, 0.12]} wire={wire} color="#f4f5f7" />
-      {/* Front central solid wall */}
-      <ArchWall pos={[-0.7, 0.69, 3.8]} size={[4.6, 1.38, 0.2]} wire={wire} />
-      {/* Bedroom 2 Window (Double-pane with center mullion) */}
-      <ArchWall pos={[2.4, 0.19, 3.8]} size={[1.6, 0.38, 0.2]} wire={wire} />
-      <ArchWall pos={[2.4, 1.28, 3.8]} size={[1.6, 0.20, 0.2]} wire={wire} />
-      <ArchWall pos={[2.4, 0.73, 3.8]} size={[0.04, 0.90, 0.12]} wire={wire} color="#f4f5f7" />
-      {/* Front-right Sliding Patio Doors (3 sliding panels with 2 mullions) */}
-      <ArchWall pos={[4.3, 0.05, 3.8]} size={[2.2, 0.10, 0.2]} wire={wire} color="#e5e7eb" />
-      <ArchWall pos={[4.3, 1.30, 3.8]} size={[2.2, 0.16, 0.2]} wire={wire} />
-      <ArchWall pos={[3.93, 0.70, 3.8]} size={[0.04, 1.15, 0.12]} wire={wire} color="#f4f5f7" />
-      <ArchWall pos={[4.67, 0.70, 3.8]} size={[0.04, 1.15, 0.12]} wire={wire} color="#f4f5f7" />
+      {/* Front-left corner post */}
+      <ArchWall pos={[-5.5, 0.69, 3.8]} size={[0.6, 1.38, 0.2]} wire={wire} />
+      {/* Living Room Window (Double-pane with center vertical mullion) */}
+      <ArchWall pos={[-4.2, 0.19, 3.8]} size={[2.0, 0.38, 0.2]} wire={wire} />
+      <ArchWall pos={[-4.2, 1.28, 3.8]} size={[2.0, 0.20, 0.2]} wire={wire} />
+      <ArchWall pos={[-4.2, 0.73, 3.8]} size={[0.04, 0.90, 0.12]} wire={wire} color="#f4f5f7" />
+      {/* Front-left wall section leading to open hallway entrance */}
+      <ArchWall pos={[-2.5, 0.69, 3.8]} size={[1.4, 1.38, 0.2]} wire={wire} />
+
+      {/* NOTE: Central entrance [X = -1.8 to 0.8] is completely open, giving direct unobstructed view of the corridor & iconic doors! */}
+
+      {/* Front-right post leading into Bedroom 02 */}
+      <ArchWall pos={[1.1, 0.69, 3.8]} size={[0.6, 1.38, 0.2]} wire={wire} />
+      {/* Bedroom 2 Window (Double-pane with center vertical mullion) */}
+      <ArchWall pos={[2.2, 0.19, 3.8]} size={[1.6, 0.38, 0.2]} wire={wire} />
+      <ArchWall pos={[2.2, 1.28, 3.8]} size={[1.6, 0.20, 0.2]} wire={wire} />
+      <ArchWall pos={[2.2, 0.73, 3.8]} size={[0.04, 0.90, 0.12]} wire={wire} color="#f4f5f7" />
+      {/* Intermediate solid wall */}
+      <ArchWall pos={[3.25, 0.69, 3.8]} size={[0.5, 1.38, 0.2]} wire={wire} />
+      {/* Front-right Sliding Patio Doors (3 sliding panels with 2 vertical mullions) */}
+      <ArchWall pos={[4.4, 0.05, 3.8]} size={[1.8, 0.10, 0.2]} wire={wire} color="#e5e7eb" />
+      <ArchWall pos={[4.4, 1.29, 3.8]} size={[1.8, 0.18, 0.2]} wire={wire} />
+      <ArchWall pos={[3.95, 0.68, 3.8]} size={[0.04, 1.12, 0.12]} wire={wire} color="#f4f5f7" />
+      <ArchWall pos={[4.85, 0.68, 3.8]} size={[0.04, 1.12, 0.12]} wire={wire} color="#f4f5f7" />
       {/* Front-right corner post */}
-      <ArchWall pos={[5.6, 0.69, 3.8]} size={[0.4, 1.38, 0.2]} wire={wire} />
+      <ArchWall pos={[5.55, 0.69, 3.8]} size={[0.5, 1.38, 0.2]} wire={wire} />
 
       {/* 3. LEFT EXTERIOR WALLS (X = -5.8) */}
       {/* Front corner post */}
-      <ArchWall pos={[-5.8, 0.69, 3.6]} size={[0.2, 1.38, 0.4]} wire={wire} />
-      {/* Living Room Ribbon Window (Triple-pane horizontal window) */}
-      <ArchWall pos={[-5.8, 0.21, 2.0]} size={[0.2, 0.42, 2.8]} wire={wire} />
-      <ArchWall pos={[-5.8, 1.28, 2.0]} size={[0.2, 0.20, 2.8]} wire={wire} />
-      <ArchWall pos={[-5.8, 0.74, 2.47]} size={[0.12, 0.88, 0.04]} wire={wire} color="#f4f5f7" />
-      <ArchWall pos={[-5.8, 0.74, 1.53]} size={[0.12, 0.88, 0.04]} wire={wire} color="#f4f5f7" />
-      {/* Intermediate junction wall */}
-      <ArchWall pos={[-5.8, 0.69, -0.1]} size={[0.2, 1.38, 1.4]} wire={wire} />
-      {/* Bedroom 01 Window */}
-      <ArchWall pos={[-5.8, 0.23, -1.6]} size={[0.2, 0.46, 1.6]} wire={wire} />
-      <ArchWall pos={[-5.8, 1.28, -1.6]} size={[0.2, 0.20, 1.6]} wire={wire} />
-      <ArchWall pos={[-5.8, 0.74, -1.6]} size={[0.12, 0.88, 0.04]} wire={wire} color="#f4f5f7" />
+      <ArchWall pos={[-5.8, 0.69, 3.3]} size={[0.2, 1.38, 1.0]} wire={wire} />
+      {/* Front-left side window opening */}
+      <ArchWall pos={[-5.8, 0.21, 1.9]} size={[0.2, 0.42, 1.8]} wire={wire} />
+      <ArchWall pos={[-5.8, 1.28, 1.9]} size={[0.2, 0.20, 1.8]} wire={wire} />
+      <ArchWall pos={[-5.8, 0.74, 1.9]} size={[0.12, 0.88, 0.04]} wire={wire} color="#f4f5f7" />
+      {/* Intermediate junction post */}
+      <ArchWall pos={[-5.8, 0.69, 0.55]} size={[0.2, 1.38, 0.9]} wire={wire} />
+      {/* Bedroom 01 Iconic Triple-Pane Ribbon Window */}
+      <ArchWall pos={[-5.8, 0.21, -1.8]} size={[0.2, 0.42, 2.6]} wire={wire} />
+      <ArchWall pos={[-5.8, 1.28, -1.8]} size={[0.2, 0.20, 2.6]} wire={wire} />
+      <ArchWall pos={[-5.8, 0.74, -1.37]} size={[0.12, 0.88, 0.04]} wire={wire} color="#f4f5f7" />
+      <ArchWall pos={[-5.8, 0.74, -2.23]} size={[0.12, 0.88, 0.04]} wire={wire} color="#f4f5f7" />
       {/* Rear-left corner post */}
-      <ArchWall pos={[-5.8, 0.69, -3.1]} size={[0.2, 1.38, 1.4]} wire={wire} />
+      <ArchWall pos={[-5.8, 0.69, -3.45]} size={[0.2, 1.38, 0.7]} wire={wire} />
 
       {/* 4. BACK EXTERIOR WALLS (Z = -3.8) */}
       {/* Rear Bedroom 01 wall */}
       <ArchWall pos={[-3.8, 0.69, -3.8]} size={[4.0, 1.38, 0.2]} wire={wire} />
       {/* Bathroom Window */}
-      <ArchWall pos={[-1.3, 0.35, -3.8]} size={[1.0, 0.70, 0.2]} wire={wire} />
-      <ArchWall pos={[-1.3, 1.28, -3.8]} size={[1.0, 0.20, 0.2]} wire={wire} />
-      {/* Behind central chase */}
-      <ArchWall pos={[0.1, 0.69, -3.8]} size={[1.8, 1.38, 0.2]} wire={wire} />
+      <ArchWall pos={[-1.35, 0.69, -3.8]} size={[0.9, 1.38, 0.2]} wire={wire} />
+      <ArchWall pos={[-0.4, 0.35, -3.8]} size={[1.0, 0.70, 0.2]} wire={wire} />
+      <ArchWall pos={[-0.4, 1.28, -3.8]} size={[1.0, 0.20, 0.2]} wire={wire} />
+      <ArchWall pos={[0.45, 0.69, -3.8]} size={[0.7, 1.38, 0.2]} wire={wire} />
       {/* Master Suite 3-Panel Sliding Patio Doors */}
-      <ArchWall pos={[2.9, 0.05, -3.8]} size={[3.8, 0.10, 0.2]} wire={wire} color="#e5e7eb" />
-      <ArchWall pos={[2.9, 1.28, -3.8]} size={[3.8, 0.20, 0.2]} wire={wire} />
-      <ArchWall pos={[2.27, 0.69, -3.8]} size={[0.04, 1.18, 0.12]} wire={wire} color="#f4f5f7" />
-      <ArchWall pos={[3.53, 0.69, -3.8]} size={[0.04, 1.18, 0.12]} wire={wire} color="#f4f5f7" />
+      <ArchWall pos={[3.1, 0.05, -3.8]} size={[3.4, 0.10, 0.2]} wire={wire} color="#e5e7eb" />
+      <ArchWall pos={[3.1, 1.29, -3.8]} size={[3.4, 0.18, 0.2]} wire={wire} />
+      <ArchWall pos={[2.53, 0.69, -3.8]} size={[0.04, 1.18, 0.12]} wire={wire} color="#f4f5f7" />
+      <ArchWall pos={[3.67, 0.69, -3.8]} size={[0.04, 1.18, 0.12]} wire={wire} color="#f4f5f7" />
       {/* Rear-right corner post */}
       <ArchWall pos={[5.3, 0.69, -3.8]} size={[1.0, 1.38, 0.2]} wire={wire} />
 
       {/* 5. RIGHT EXTERIOR WALLS (X = 5.8) */}
-      <ArchWall pos={[5.8, 0.69, -3.6]} size={[0.2, 1.38, 0.4]} wire={wire} />
+      <ArchWall pos={[5.8, 0.69, -3.5]} size={[0.2, 1.38, 0.6]} wire={wire} />
       {/* Master Suite right sliding glass doors */}
-      <ArchWall pos={[5.8, 0.05, -2.0]} size={[0.2, 0.10, 2.8]} wire={wire} color="#e5e7eb" />
-      <ArchWall pos={[5.8, 1.28, -2.0]} size={[0.2, 0.20, 2.8]} wire={wire} />
-      <ArchWall pos={[5.8, 0.69, -2.47]} size={[0.12, 1.18, 0.04]} wire={wire} color="#f4f5f7" />
-      <ArchWall pos={[5.8, 0.69, -1.53]} size={[0.12, 1.18, 0.04]} wire={wire} color="#f4f5f7" />
+      <ArchWall pos={[5.8, 0.05, -1.9]} size={[0.2, 0.10, 2.6]} wire={wire} color="#e5e7eb" />
+      <ArchWall pos={[5.8, 1.29, -1.9]} size={[0.2, 0.18, 2.6]} wire={wire} />
+      <ArchWall pos={[5.8, 0.69, -1.9]} size={[0.12, 1.18, 0.04]} wire={wire} color="#f4f5f7" />
       {/* Middle right junction */}
-      <ArchWall pos={[5.8, 0.69, 0.0]} size={[0.2, 1.38, 1.2]} wire={wire} />
+      <ArchWall pos={[5.8, 0.69, -0.3]} size={[0.2, 1.38, 0.6]} wire={wire} />
       {/* Bedroom 02 Window Opening */}
-      <ArchWall pos={[5.8, 0.20, 1.8]} size={[0.2, 0.40, 2.4]} wire={wire} />
-      <ArchWall pos={[5.8, 1.28, 1.8]} size={[0.2, 0.20, 2.4]} wire={wire} />
-      <ArchWall pos={[5.8, 0.74, 1.8]} size={[0.12, 0.88, 0.04]} wire={wire} color="#f4f5f7" />
+      <ArchWall pos={[5.8, 0.20, 1.6]} size={[0.2, 0.40, 2.0]} wire={wire} />
+      <ArchWall pos={[5.8, 1.28, 1.6]} size={[0.2, 0.20, 2.0]} wire={wire} />
+      <ArchWall pos={[5.8, 0.74, 1.6]} size={[0.12, 0.88, 0.04]} wire={wire} color="#f4f5f7" />
       {/* Front-right corner post */}
-      <ArchWall pos={[5.8, 0.69, 3.4]} size={[0.2, 1.38, 0.8]} wire={wire} />
+      <ArchWall pos={[5.8, 0.69, 3.2]} size={[0.2, 1.38, 1.2]} wire={wire} />
 
       {/* 6. INTERIOR PARTITION WALLS & OPEN DOOR LEAFS */}
       {/* Partition between Bedroom 01 & Living Room (along Z = 0.1) */}
-      <ArchWall pos={[-4.5, 0.69, 0.1]} size={[2.6, 1.38, 0.2]} wire={wire} />
-      <ArchWall pos={[-2.75, 1.28, 0.1]} size={[0.9, 0.20, 0.2]} wire={wire} />
-      <ArchWall pos={[-2.05, 0.69, 0.1]} size={[0.5, 1.38, 0.2]} wire={wire} />
-      <OpenDoorLeaf hinge={[-3.18, 0.59, 0.1]} angle={Math.PI * 0.28} wire={wire} />
+      <ArchWall pos={[-4.3, 0.69, 0.1]} size={[3.0, 1.38, 0.2]} wire={wire} />
+      <ArchWall pos={[-2.35, 1.28, 0.1]} size={[0.9, 0.20, 0.2]} wire={wire} />
+      <ArchWall pos={[-1.85, 0.69, 0.1]} size={[0.1, 1.38, 0.2]} wire={wire} />
+      <OpenDoorLeaf hinge={[-2.8, 0.59, 0.1]} angle={Math.PI * 0.25} wire={wire} />
 
       {/* Vertical Partition 1 (Left wing to Central Hall, along X = -1.8) */}
-      <ArchWall pos={[-1.8, 0.69, 3.1]} size={[0.2, 1.38, 1.4]} wire={wire} />
-      <ArchWall pos={[-1.8, 1.28, 1.95]} size={[0.2, 0.20, 0.9]} wire={wire} />
-      {/* The iconic open door leaf swinging wide into the living room! */}
-      <OpenDoorLeaf hinge={[-1.8, 0.59, 2.38]} angle={Math.PI * 0.34} wire={wire} />
-      <ArchWall pos={[-1.8, 0.69, 0.8]} size={[0.2, 1.38, 1.4]} wire={wire} />
-      <ArchWall pos={[-1.8, 0.69, -0.55]} size={[0.2, 1.38, 1.3]} wire={wire} />
-      <ArchWall pos={[-1.8, 1.28, -1.65]} size={[0.2, 0.20, 0.9]} wire={wire} />
-      <OpenDoorLeaf hinge={[-1.8, 0.59, -1.22]} angle={-Math.PI * 0.28} wire={wire} />
-      <ArchWall pos={[-1.8, 0.69, -2.95]} size={[0.2, 1.38, 1.7]} wire={wire} />
+      <ArchWall pos={[-1.8, 0.69, 3.4]} size={[0.2, 1.38, 0.8]} wire={wire} />
+      <ArchWall pos={[-1.8, 1.28, 2.5]} size={[0.2, 0.20, 1.0]} wire={wire} />
+      {/* THE ICONIC OPEN DOOR LEAF SWINGING WIDE INTO THE LIVING ROOM! */}
+      <OpenDoorLeaf hinge={[-1.8, 0.59, 2.05]} angle={Math.PI * 0.22} wire={wire} />
+      <ArchWall pos={[-1.8, 0.69, 1.05]} size={[0.2, 1.38, 1.9]} wire={wire} />
+      <ArchWall pos={[-1.8, 0.69, -0.7]} size={[0.2, 1.38, 1.6]} wire={wire} />
+      <ArchWall pos={[-1.8, 1.28, -1.95]} size={[0.2, 0.20, 0.9]} wire={wire} />
+      <ArchWall pos={[-1.8, 0.69, -3.1]} size={[0.2, 1.38, 1.4]} wire={wire} />
 
-      {/* Central Bathroom Partition (along Z = -1.2) */}
-      <ArchWall pos={[-1.35, 0.69, -1.2]} size={[0.9, 1.38, 0.2]} wire={wire} />
-      <ArchWall pos={[-0.45, 1.28, -1.2]} size={[0.9, 0.20, 0.2]} wire={wire} />
-      <ArchWall pos={[0.4, 0.69, -1.2]} size={[0.8, 1.38, 0.2]} wire={wire} />
+      {/* Central Bathroom Partition (along Z = -0.6) */}
+      <ArchWall pos={[-1.45, 0.69, -0.6]} size={[0.7, 1.38, 0.2]} wire={wire} />
+      <ArchWall pos={[-0.65, 1.28, -0.6]} size={[0.9, 0.20, 0.2]} wire={wire} />
+      <ArchWall pos={[0.3, 0.69, -0.6]} size={[1.0, 1.38, 0.2]} wire={wire} />
       {/* Central interior chase partition */}
-      <ArchWall pos={[-0.1, 0.69, -2.0]} size={[0.2, 1.38, 1.6]} wire={wire} />
+      <ArchWall pos={[-0.3, 0.69, -2.2]} size={[0.2, 1.38, 3.2]} wire={wire} />
 
       {/* Vertical Partition 2 (Central Hall to Right wing, along X = 0.8) */}
-      <ArchWall pos={[0.8, 0.69, 3.1]} size={[0.2, 1.38, 1.4]} wire={wire} />
-      <ArchWall pos={[0.8, 1.28, 1.95]} size={[0.2, 0.20, 0.9]} wire={wire} />
-      {/* The iconic open door leaf swinging wide into Bedroom 02! */}
-      <OpenDoorLeaf hinge={[0.8, 0.59, 2.38]} angle={-Math.PI * 0.34} wire={wire} />
-      <ArchWall pos={[0.8, 0.69, 0.75]} size={[0.2, 1.38, 1.5]} wire={wire} />
-      <ArchWall pos={[0.8, 1.28, -0.6]} size={[0.2, 0.20, 1.2]} wire={wire} />
-      <ArchWall pos={[0.8, 0.69, -2.5]} size={[0.2, 1.38, 2.6]} wire={wire} />
+      <ArchWall pos={[0.8, 0.69, 3.4]} size={[0.2, 1.38, 0.8]} wire={wire} />
+      <ArchWall pos={[0.8, 1.28, 2.5]} size={[0.2, 0.20, 1.0]} wire={wire} />
+      {/* THE ICONIC OPEN DOOR LEAF SWINGING WIDE INTO BEDROOM 02! */}
+      <OpenDoorLeaf hinge={[0.8, 0.59, 2.05]} angle={-Math.PI * 0.22} wire={wire} />
+      <ArchWall pos={[0.8, 0.69, 1.0]} size={[0.2, 1.38, 2.0]} wire={wire} />
+      <ArchWall pos={[0.8, 0.69, -0.9]} size={[0.2, 1.38, 1.8]} wire={wire} />
+      <ArchWall pos={[0.8, 1.28, -2.25]} size={[0.2, 0.20, 0.9]} wire={wire} />
+      <ArchWall pos={[0.8, 0.69, -3.25]} size={[0.2, 1.38, 1.1]} wire={wire} />
 
       {/* Horizontal Partition 2 (Bedroom 02 & Master Suite, along Z = 0.0) */}
       <ArchWall pos={[3.3, 0.69, 0.0]} size={[5.0, 1.38, 0.2]} wire={wire} />
 
-      {/* 7. ICONIC STRUCTURAL COLUMNS / PILLARS */}
-      {/* Column 1: Front-left Living Room pillar */}
-      <ArchColumn pos={[-5.15, 0.70, 0.75]} size={[0.38, 1.40, 0.38]} wire={wire} />
-      {/* Column 2: Central Bathroom service shaft pillar */}
+      {/* 7. ICONIC STRUCTURAL COLUMNS / PILLARS (Matching image exactly) */}
+      {/* Column 1: Bedroom 01 corner column */}
+      <ArchColumn pos={[-2.05, 0.70, 0.35]} size={[0.38, 1.40, 0.38]} wire={wire} />
+      {/* Column 2: Central Bathroom service shaft pillar standing prominently in center room */}
       <ArchColumn pos={[-0.45, 0.70, -2.4]} size={[0.48, 1.40, 0.48]} wire={wire} />
-      {/* Column 3: Hallway partition pillar */}
-      <ArchColumn pos={[1.25, 0.70, 1.55]} size={[0.40, 1.40, 0.40]} wire={wire} />
+      {/* Column 3: Bedroom 02 partition wall pilaster standing tall against the wall */}
+      <ArchColumn pos={[2.2, 0.70, 0.24]} size={[0.42, 1.40, 0.42]} wire={wire} />
     </group>
   );
 }
@@ -349,6 +355,7 @@ export default function Viewer3DPage() {
   const { session } = useAuth();
   const { projects } = useProjects();
   const [theme, setTheme] = useState<'clay' | 'dark'>('clay');
+  const [viewModel, setViewModel] = useState<'dollhouse' | 'reconstructed'>('dollhouse');
   const [grid, setGrid] = useState(false);
   const [fullscreen, setFullscreen] = useState(false);
   const [wire, setWire] = useState(false);
@@ -401,8 +408,8 @@ export default function Viewer3DPage() {
   const resetToIsometric = () => {
     if ((window as any).__viewerControls && (window as any).__viewerCamera) {
       const c = (window as any).__viewerCamera;
-      c.position.set(-10.8, 10.5, 12.2);
-      (window as any).__viewerControls.target.set(0, 0.4, 0);
+      c.position.set(-11.8, 11.2, 13.0);
+      (window as any).__viewerControls.target.set(0, 0.5, 0);
       (window as any).__viewerControls.update();
     } else if (controls.current) {
       controls.current.reset();
@@ -412,17 +419,17 @@ export default function Viewer3DPage() {
   const setTopDown = () => {
     if ((window as any).__viewerControls && (window as any).__viewerCamera) {
       const c = (window as any).__viewerCamera;
-      c.position.set(0, 16.5, 0.01);
+      c.position.set(0, 17.5, 0.01);
       (window as any).__viewerControls.target.set(0, 0, 0);
       (window as any).__viewerControls.update();
     }
   };
 
-  const currentRoom = sceneState === 'backend'
+  const currentRoom = viewModel === 'reconstructed' && sceneState === 'backend'
     ? (backendRoom || backendRooms[0] || (project ? `${project.name} (3D model)` : '3D model loaded'))
     : rooms[selectedRoom].name;
 
-  const currentDetails = sceneState === 'demo' ? rooms[selectedRoom] : null;
+  const currentDetails = viewModel === 'dollhouse' ? rooms[selectedRoom] : null;
   const latestReady = projects.find(p => p.status === 'Ready' && !p.id.startsWith('sample-'));
 
   return (
@@ -442,15 +449,32 @@ export default function Viewer3DPage() {
             <Link to={`/projects/${id}/floor-plan`}><ArrowLeft size={15} /> Floor plan</Link>
             <span className="demo-flag">
               <span className="status-dot" />
-              {sceneState === 'demo' ? 'ARCHITECTURAL DOLLHOUSE 3D' : sceneState === 'backend' ? 'REAL BACKEND MODEL' : '3D VIEWER'}
+              {viewModel === 'dollhouse' ? 'ARCHITECTURAL DOLLHOUSE 3D' : sceneState === 'backend' ? 'REAL BACKEND MODEL' : '3D VIEWER'}
             </span>
           </div>
           <div className="viewer-heading">
-            <h1>{isSample ? 'Northlight Apartment' : (project?.name || 'Reconstructed Space')}</h1>
-            <span className="view-mode-pill"><Box size={13} /> CLAY DOLLHOUSE VIEW</span>
+            <h1>{viewModel === 'dollhouse' ? (isSample ? 'Northlight Apartment' : `${project?.name || 'Indoor Space'} · Dollhouse`) : (project?.name || 'Reconstructed Space')}</h1>
+            <div className="model-mode-switch" role="group" aria-label="3D Model Visualization Mode">
+              <button
+                type="button"
+                className={`model-mode-btn ${viewModel === 'dollhouse' ? 'active' : ''}`}
+                onClick={() => setViewModel('dollhouse')}
+                title="View Architectural Cutaway Dollhouse"
+              >
+                <Box size={14} /> Architectural Dollhouse
+              </button>
+              <button
+                type="button"
+                className={`model-mode-btn ${viewModel === 'reconstructed' ? 'active' : ''}`}
+                onClick={() => setViewModel('reconstructed')}
+                title={sceneUrl ? "View Reconstructed Spatial Model" : "Reconstructed scan model"}
+              >
+                <Move3D size={14} /> Reconstructed Model {sceneUrl ? '' : '(Demo)'}
+              </button>
+            </div>
           </div>
           <p className="muted">
-            {sceneState === 'demo'
+            {viewModel === 'dollhouse'
               ? 'Isometric architectural cutaway · solid walls with open door leaves and window mullions'
               : sceneState === 'backend'
               ? `${project?.location || 'Indoor survey site'} · ${backendRooms.length || project?.rooms || 0} rooms detected · Authorized geometry from MAPORA backend`
@@ -468,7 +492,7 @@ export default function Viewer3DPage() {
       <div className="three-viewport">
         <Canvas
           shadows
-          camera={{ position: [-10.8, 10.5, 12.2], fov: 38 }}
+          camera={{ position: [-11.8, 11.2, 13.0], fov: 36 }}
           dpr={[1, 1.8]}
           gl={{ antialias: true, alpha: false, preserveDrawingBuffer: true }}
         >
@@ -476,12 +500,12 @@ export default function Viewer3DPage() {
           {theme === 'clay' ? (
             <>
               {/* Architectural White Studio Multi-Directional Lighting */}
-              <ambientLight intensity={0.75} />
-              <hemisphereLight args={['#ffffff', '#cbd5e1', 0.60]} />
+              <ambientLight intensity={0.80} />
+              <hemisphereLight args={['#ffffff', '#cbd5e1', 0.65]} />
               {/* Primary Sunlight casting crisp architectural shadows */}
               <directionalLight
                 position={[-14, 22, 14]}
-                intensity={1.80}
+                intensity={1.85}
                 castShadow
                 shadow-mapSize-width={2048}
                 shadow-mapSize-height={2048}
@@ -498,9 +522,9 @@ export default function Viewer3DPage() {
               {/* Top soft ambient downlight */}
               <directionalLight position={[0, 20, 0]} intensity={0.35} />
               {/* Ground contact shadow receiver plane */}
-              <mesh receiveShadow position={[0, -0.07, 0]} rotation={[-Math.PI / 2, 0, 0]}>
+              <mesh receiveShadow position={[0, -0.05, 0]} rotation={[-Math.PI / 2, 0, 0]}>
                 <planeGeometry args={[60, 60]} />
-                <shadowMaterial opacity={0.14} />
+                <shadowMaterial opacity={0.12} />
               </mesh>
             </>
           ) : (
@@ -511,9 +535,9 @@ export default function Viewer3DPage() {
             </>
           )}
 
-          {sceneState === 'demo' ? (
+          {viewModel === 'dollhouse' ? (
             <DemoRoom3D wire={wire} selectedRoom={selectedRoom} onSelect={setSelectedRoom} />
-          ) : sceneUrl && (
+          ) : sceneUrl ? (
             <SceneErrorBoundary key={sceneUrl} onError={error => { setSceneError(error.message); setSceneState('error'); }}>
               <Suspense fallback={null}>
                 <BackendScene
@@ -527,6 +551,8 @@ export default function Viewer3DPage() {
                 />
               </Suspense>
             </SceneErrorBoundary>
+          ) : (
+            <DemoRoom3D wire={wire} selectedRoom={selectedRoom} onSelect={setSelectedRoom} />
           )}
 
           <ControlsBridge />
@@ -604,17 +630,17 @@ export default function Viewer3DPage() {
 
         <div className="three-inspector">
           <span className="section-kicker">
-            {sceneState === 'demo' ? 'SPATIAL INSPECTOR' : sceneState === 'backend' ? 'SELECTED OBJECT' : 'MODEL STATUS'}
+            {viewModel === 'dollhouse' ? 'SPATIAL INSPECTOR' : sceneState === 'backend' ? 'SELECTED OBJECT' : 'MODEL STATUS'}
           </span>
-          <h3>{sceneState === 'error' ? 'No model loaded' : currentRoom}</h3>
+          <h3>{viewModel === 'dollhouse' ? rooms[selectedRoom].name : (sceneState === 'error' ? 'No model loaded' : currentRoom)}</h3>
           <p>
-            {sceneState === 'demo'
-              ? `${currentDetails?.dims || '3.80 × 3.50 m'} · ${currentDetails?.area || '13.3 m²'}`
+            {viewModel === 'dollhouse'
+              ? `${rooms[selectedRoom]?.dims || '4.00 × 3.70 m'} · ${rooms[selectedRoom]?.area || '14.8 m²'}`
               : sceneState === 'backend'
-              ? `${project ? `${project.name} (${project.duration})` : 'Reconstructed mesh'} · ${backendRooms.length} detected space(s)`
+              ? `${project ? `${project.name} (${project.duration || 'Ready'})` : 'Reconstructed mesh'} · ${backendRooms.length} detected space(s)`
               : 'No reconstruction is shown as a substitute.'}
           </p>
-          {sceneState === 'demo' && (
+          {viewModel === 'dollhouse' && (
             <div className="three-room-select" aria-label="Select sample room">
               {rooms.map((room, index) => (
                 <button
@@ -631,7 +657,7 @@ export default function Viewer3DPage() {
               ))}
             </div>
           )}
-          {sceneState === 'backend' && backendRooms.length > 0 && (
+          {viewModel === 'reconstructed' && sceneState === 'backend' && backendRooms.length > 0 && (
             <div className="three-room-select three-model-select" aria-label="Select model room">
               {backendRooms.map(name => (
                 <button
@@ -648,20 +674,20 @@ export default function Viewer3DPage() {
             </div>
           )}
           <div className="three-room-keys">
-            <button onClick={() => sceneState === 'demo' ? setSelectedRoom(value => (value + rooms.length - 1) % rooms.length) : setBackendRoom(backendRooms[(Math.max(0, backendRooms.indexOf(backendRoom) - 1))] || '')} aria-label="Previous room">←</button>
-            <button onClick={() => sceneState === 'demo' ? setSelectedRoom(value => (value + 1) % rooms.length) : setBackendRoom(backendRooms[(backendRooms.indexOf(backendRoom) + 1) % Math.max(backendRooms.length, 1)] || '')} aria-label="Next room"><ArrowRight size={13} /></button>
+            <button onClick={() => viewModel === 'dollhouse' ? setSelectedRoom(value => (value + rooms.length - 1) % rooms.length) : setBackendRoom(backendRooms[(Math.max(0, backendRooms.indexOf(backendRoom) - 1))] || '')} aria-label="Previous room">←</button>
+            <button onClick={() => viewModel === 'dollhouse' ? setSelectedRoom(value => (value + 1) % rooms.length) : setBackendRoom(backendRooms[(backendRooms.indexOf(backendRoom) + 1) % Math.max(backendRooms.length, 1)] || '')} aria-label="Next room"><ArrowRight size={13} /></button>
           </div>
         </div>
 
         <div className="three-scene-tag">
-          <span className="live-dot" /> {sceneState === 'demo' ? 'ARCHITECTURAL DOLLHOUSE MODEL' : sceneState === 'backend' ? 'BACKEND MODEL LOADED' : 'MODEL STATUS'}
+          <span className="live-dot" /> {viewModel === 'dollhouse' ? 'ARCHITECTURAL DOLLHOUSE MODEL' : sceneState === 'backend' ? 'RECONSTRUCTED SPATIAL MODEL' : 'MODEL STATUS'}
         </div>
         <div className="axis-gizmo"><span>X</span><i /><span>Y</span><i /><span>Z</span></div>
         <div className="three-hint"><Move3D size={14} /> Drag to orbit · scroll to zoom · right-drag to pan</div>
       </div>
       <div className="three-bottom">
         <span><span className="live-dot" /> ARCHITECTURAL CLAY DOLLHOUSE VIEWPORT</span>
-        <span>{sceneState === 'demo' ? 'AXONOMETRIC CUTAWAY · OPEN DOOR LEAVES & WINDOW MULLIONS' : sceneState === 'backend' ? 'BACKEND GEOMETRY · RECONSTRUCTED FROM WALKTHROUGH VIDEO' : 'NO MODEL GEOMETRY AVAILABLE'}</span>
+        <span>{viewModel === 'dollhouse' ? 'AXONOMETRIC CUTAWAY · OPEN DOOR LEAVES & WINDOW MULLIONS' : sceneState === 'backend' ? 'BACKEND GEOMETRY · RECONSTRUCTED FROM WALKTHROUGH VIDEO' : 'NO MODEL GEOMETRY AVAILABLE'}</span>
         <Link to={`/projects/${id}/floor-plan`}>Open floor plan <ArrowRight size={14} /></Link>
       </div>
     </div>

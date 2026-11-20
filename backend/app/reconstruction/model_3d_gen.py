@@ -43,19 +43,19 @@ def generate_3d_model_from_floor_plan(
     total_faces = 0
     room_names: List[str] = [r.get("name", f"Room {i+1}") for i, r in enumerate(floor_plan.rooms)]
 
-    # Architectural PBR materials (clean matte white/neutral dollhouse styling)
+    # Architectural PBR materials (clean matte white/neutral dollhouse styling matching reference aesthetic)
     wall_material = PBRMaterial(
         name="WallMaterial",
-        roughnessFactor=0.80,
+        roughnessFactor=0.78,
         metallicFactor=0.01,
-        baseColorFactor=[0.96, 0.96, 0.97, 1.0],
+        baseColorFactor=[0.98, 0.98, 0.99, 1.0],
         doubleSided=True,
     )
     floor_material = PBRMaterial(
         name="FloorMaterial",
         roughnessFactor=0.88,
         metallicFactor=0.02,
-        baseColorFactor=[0.90, 0.91, 0.93, 1.0],
+        baseColorFactor=[0.94, 0.95, 0.96, 1.0],
         doubleSided=True,
     )
 

@@ -82,6 +82,50 @@
   pointer-events: auto !important;
 }
 
+.model-mode-switch {
+  display: inline-flex;
+  align-items: center;
+  background: rgba(18, 19, 23, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 6px;
+  padding: 3px;
+  gap: 3px;
+  margin-left: 12px;
+}
+
+.model-mode-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 11px;
+  font-family: var(--heading, sans-serif);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.model-mode-btn:hover:not(:disabled) {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.model-mode-btn.active {
+  background: #ff6a00;
+  color: #ffffff;
+  border-color: #ff7a1a;
+  box-shadow: 0 2px 8px rgba(255, 106, 0, 0.35);
+}
+
+.model-mode-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 .scene-state-overlay {
   pointer-events: none;
 }
