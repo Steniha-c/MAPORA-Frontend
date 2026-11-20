@@ -25,7 +25,7 @@ class DepthEstimationAdapter:
     """
     Adapter for PyTorch monocular depth estimation.
     Supports MiDaS / DPT models with automatic device selection (CUDA/CPU).
-    Gracefully falls back to gradient-structural depth estimation if model weights are not loaded.
+    Loads local offline MiDaS checkpoints deterministically without PyTorch Hub network requests.
     """
 
     def __init__(self, model_type: Optional[str] = None):
@@ -35,17 +35,85 @@ class DepthEstimationAdapter:
         self.transform = None
         self._initialized = False
 
-    def initialize_model(self) -> bool:
-        """Attempt to load MiDaS PyTorch model from torch hub or local cache."""
-        if self._initialized:
-            return self.model is not None
+    def _load_offline_midas_small(self) -> bool:
+        """Load MiDaS v2.1 Small model and transforms from local disk without any network requests."""
+        possible_weight_paths = [
+            Path("backend/models_cache/weights/midas_v21_small_256.pt"),
+            Path("backend/models_cache/intel-isl_MiDaS_master/weights/midas_v21_small_256.pt"),
+            Path(settings.MODEL_WEIGHTS_DIR) / "weights" / "midas_v21_small_256.pt",
+            Path(settings.MODEL_WEIGHTS_DIR) / "midas_v21_small_256.pt",
+        ]
+
+        weights_file = None
+        for p in possible_weight_paths:
+            if p.exists() and p.stat().st_size > 10_000_000:
+                weights_file = p
+                break
+
+        if not weights_file:
+            return False
+
+        repo_dir = Path("backend/models_cache/intel-isl_MiDaS_master")
+        if not repo_dir.exists():
+            repo_dir = Path(settings.MODEL_WEIGHTS_DIR) / "intel-isl_MiDaS_master"
+
+        if not repo_dir.exists():
+            return False
 
         try:
-            logger.info(f"Attempting to load {self.model_type} monocular depth model on {self.device}...")
-            # Set torch hub cache directory to settings.MODEL_WEIGHTS_DIR
-            torch.hub.set_dir(settings.MODEL_WEIGHTS_DIR)
+            import sys
+            import timm
+            import torch.nn as nn
 
-            # Attempt loading MiDaS model
+            repo_str = str(repo_dir.resolve())
+            if repo_str not in sys.path:
+                sys.path.insert(0, repo_str)
+
+            import midas.blocks as B
+
+            def custom_effnet(use_pretrained, exportable=False):
+                effnet = timm.create_model("tf_efficientnet_lite3", pretrained=False)
+                pretrained = nn.Module()
+                act1 = getattr(effnet, "act1", nn.ReLU6(inplace=True))
+                pretrained.layer1 = nn.Sequential(effnet.conv_stem, effnet.bn1, act1, *effnet.blocks[0:2])
+                pretrained.layer2 = nn.Sequential(*effnet.blocks[2:3])
+                pretrained.layer3 = nn.Sequential(*effnet.blocks[3:5])
+                pretrained.layer4 = nn.Sequential(*effnet.blocks[5:9])
+                return pretrained
+
+            B._make_pretrained_efficientnet_lite3 = custom_effnet
+
+            from midas.model_loader import load_model
+
+            model, transform, net_w, net_h = load_model(
+                str(self.device),
+                str(weights_file),
+                "midas_v21_small_256",
+                optimize=False,
+            )
+            self.model = model
+            self.transform = transform
+            self._initialized = True
+            logger.info(f"Loaded genuine MiDaS Small model offline from {weights_file} (device={self.device})")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to load offline MiDaS model: {e}")
+            return False
+
+    def initialize_model(self) -> bool:
+        """Attempt to load MiDaS PyTorch model from local cache first, then torch hub."""
+        if self._initialized and self.model is not None:
+            return True
+
+        logger.info(f"Initializing {self.model_type} monocular depth model on {self.device}...")
+
+        # 1. Attempt offline local loading first (guaranteed zero-network, immune to HTTP 403)
+        if self._load_offline_midas_small():
+            return True
+
+        # 2. Secondary fallback: Attempt torch.hub if network is available
+        try:
+            torch.hub.set_dir(settings.MODEL_WEIGHTS_DIR)
             self.model = torch.hub.load("intel-isl/MiDaS", self.model_type, trust_repo=True)
             self.model.to(self.device)
             self.model.eval()
@@ -57,12 +125,12 @@ class DepthEstimationAdapter:
                 self.transform = midas_transforms.small_transform
 
             self._initialized = True
-            logger.info(f"Successfully loaded {self.model_type} depth model.")
+            logger.info(f"Successfully loaded {self.model_type} depth model via torch.hub.")
             return True
         except Exception as e:
-            logger.warning(
+            logger.error(
                 f"Could not load MiDaS model weights from network/cache: {e}. "
-                "Activating geometric depth estimation fallback."
+                "Local weights midas_v21_small_256.pt must be present in backend/models_cache/weights/."
             )
             self.model = None
             self.transform = None
@@ -77,51 +145,52 @@ class DepthEstimationAdapter:
         if not self._initialized:
             self.initialize_model()
 
+        if self.model is None or self.transform is None:
+            raise RuntimeError(
+                "Monocular depth estimation failed: Genuine MiDaS neural model weights are unavailable. "
+                "Silent synthetic depth substitution has been disabled. "
+                "Ensure midas_v21_small_256.pt is located in backend/models_cache/weights/."
+            )
+
         h, w = image.shape[:2]
+        rgb_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-        if self.model is not None and self.transform is not None:
+        # Handle transform whether it's Compose from model_loader or torchvision transform
+        if callable(self.transform):
             try:
-                rgb_img = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                # midas.model_loader transforms take dict: {"image": rgb_img}
+                transformed = self.transform({"image": rgb_img})
+                if isinstance(transformed, dict):
+                    input_batch = torch.from_numpy(transformed["image"]).to(self.device).unsqueeze(0)
+                else:
+                    input_batch = transformed.to(self.device)
+                    if input_batch.dim() == 3:
+                        input_batch = input_batch.unsqueeze(0)
+            except Exception:
                 input_batch = self.transform(rgb_img).to(self.device)
+                if input_batch.dim() == 3:
+                    input_batch = input_batch.unsqueeze(0)
+        else:
+            raise RuntimeError("Invalid transform object in DepthEstimationAdapter.")
 
-                with torch.no_grad():
-                    prediction = self.model(input_batch)
-                    prediction = torch.nn.functional.interpolate(
-                        prediction.unsqueeze(1),
-                        size=(h, w),
-                        mode="bicubic",
-                        align_corners=False,
-                    ).squeeze()
+        with torch.no_grad():
+            prediction = self.model(input_batch)
+            prediction = torch.nn.functional.interpolate(
+                prediction.unsqueeze(1),
+                size=(h, w),
+                mode="bicubic",
+                align_corners=False,
+            ).squeeze()
 
-                output = prediction.cpu().numpy()
-                # Normalize inverse depth to metric range for indoor rooms (0.5m - 8.0m)
-                inv_min, inv_max = np.percentile(output, 2), np.percentile(output, 98)
-                norm_inv = np.clip((output - inv_min) / max(1e-6, inv_max - inv_min), 0.05, 1.0)
-                # Invert: higher disparity = closer distance
-                depth_meters = 1.0 / (norm_inv + 0.1) * 2.0
-                depth_meters = np.clip(depth_meters, 0.5, 10.0)
+        output = prediction.cpu().numpy()
+        # Normalize inverse depth to metric range for indoor rooms (0.5m - 8.0m)
+        inv_min, inv_max = np.percentile(output, 2), np.percentile(output, 98)
+        norm_inv = np.clip((output - inv_min) / max(1e-6, inv_max - inv_min), 0.05, 1.0)
+        # Invert: higher disparity = closer distance
+        depth_meters = 1.0 / (norm_inv + 0.1) * 2.0
+        depth_meters = np.clip(depth_meters, 0.5, 10.0)
 
-                return DepthEstimationResult(depth_meters, is_model_inferred=True, model_name=self.model_type)
-            except Exception as e:
-                logger.error(f"Inference error with {self.model_type}: {e}. Falling back to structural depth.")
-
-        # Heuristic structural depth estimation fallback:
-        # Uses vertical horizon gradient and edge density to approximate indoor room perspective
-        gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-        edges = cv2.Canny(gray, 50, 150)
-        dist_transform = cv2.distanceTransform(255 - edges, cv2.DIST_L2, 5)
-        dist_norm = cv2.normalize(dist_transform, None, 0, 1.0, cv2.NORM_MINMAX)
-
-        y_indices, _ = np.indices((h, w))
-        horizon_y = h * 0.55
-        vertical_gradient = np.abs(y_indices - horizon_y) / (h * 0.5)
-        vertical_gradient = np.clip(vertical_gradient, 0.1, 1.0)
-
-        # Indoor rooms: horizon and corners have larger depth; floor near bottom is closer
-        depth_map = (1.5 + (1.0 - vertical_gradient) * 3.5 + dist_norm * 1.5).astype(np.float32)
-        depth_map = np.clip(depth_map, 0.8, 8.0)
-
-        return DepthEstimationResult(depth_map, is_model_inferred=False, model_name="HeuristicGeometricDepth")
+        return DepthEstimationResult(depth_meters, is_model_inferred=True, model_name="MiDaS_small_v21")
 
     def estimate_batch(self, images: List[np.ndarray]) -> List[DepthEstimationResult]:
         """Estimate depth for multiple keyframes."""

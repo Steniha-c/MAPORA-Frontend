@@ -35,6 +35,7 @@ class ProjectService:
             rooms_count=0,
             duration="00:00",
             version_count=1,
+            input_type=getattr(project_in, "input_type", "video") or "video",
             user_id=user.id,
         )
         db.add(project)

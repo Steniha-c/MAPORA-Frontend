@@ -46,12 +46,19 @@ class FloorPlanService:
             for w in plan.walls
         ]
 
+        from app.reconstruction.floor_plan_gen import compute_room_connectivity
+        rooms_dict = [{"id": r.id, "name": r.name, "bounds": {"x": r.bounds_x, "y": r.bounds_y, "width": r.bounds_width, "height": r.bounds_height}} for r in plan.rooms]
+        walls_dict = [{"id": w.id, "start": {"x": w.start_x, "y": w.start_y}, "end": {"x": w.end_x, "y": w.end_y}, "kind": w.kind} for w in plan.walls]
+        conn = compute_room_connectivity(rooms_dict, walls_dict)
+
         return FloorPlanModel(
             coordinateSystem=plan.coordinate_system,
             units=plan.units,
             measurementsAvailable=plan.measurements_available,
             rooms=rooms,
             walls=walls,
+            connectivityGraph=conn,
+            pathways=conn.get("pathways"),
         )
 
     @staticmethod

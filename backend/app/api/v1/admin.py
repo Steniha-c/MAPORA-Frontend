@@ -96,10 +96,15 @@ def get_admin_metrics(
     db: Session = Depends(get_db),
 ):
     """Aggregate high-level system and storage metrics."""
-    from app.models.upload import VideoUpload
+    from app.models.upload import VideoUpload, ImageUpload
 
-    total_storage_bytes = db.scalar(select(func.sum(VideoUpload.file_size_bytes))) or 0
-    total_uploads = db.scalar(select(func.count(VideoUpload.id))) or 0
+    video_bytes = db.scalar(select(func.sum(VideoUpload.file_size_bytes))) or 0
+    image_bytes = db.scalar(select(func.sum(ImageUpload.file_size_bytes))) or 0
+    total_storage_bytes = video_bytes + image_bytes
+
+    video_uploads = db.scalar(select(func.count(VideoUpload.id))) or 0
+    image_uploads = db.scalar(select(func.count(ImageUpload.id))) or 0
+    total_uploads = video_uploads + image_uploads
 
     return {
         "users": db.scalar(select(func.count(User.id))) or 0,
@@ -112,6 +117,8 @@ def get_admin_metrics(
         },
         "storage": {
             "totalUploads": total_uploads,
+            "videoUploads": video_uploads,
+            "imageUploads": image_uploads,
             "totalVolumeBytes": total_storage_bytes,
         },
     }

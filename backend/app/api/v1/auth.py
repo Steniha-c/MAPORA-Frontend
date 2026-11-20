@@ -77,6 +77,7 @@ def refresh_token(payload: RefreshTokenRequest, db: Session = Depends(get_db)):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired refresh token. Please log in again.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     return session

@@ -45,8 +45,12 @@ class Settings(BaseSettings):
     CORS_ORIGINS: Union[List[str], str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
         "http://localhost:3000",
         "http://127.0.0.1:3000",
+        "http://localhost:4173",
+        "http://127.0.0.1:4173",
         "http://localhost:8000",
         "http://127.0.0.1:8000",
     ]
@@ -92,12 +96,22 @@ class Settings(BaseSettings):
 
     # Video Upload Constraints
     MAX_UPLOAD_SIZE_BYTES: int = 500 * 1024 * 1024  # 500 MB
-    ALLOWED_VIDEO_EXTENSIONS: List[str] = [".mp4", ".mov", ".m4v", ".avi"]
+    ALLOWED_VIDEO_EXTENSIONS: List[str] = [".mp4", ".mov", ".m4v", ".avi", ".webm"]
     ALLOWED_VIDEO_MIME_TYPES: List[str] = [
         "video/mp4",
         "video/quicktime",
         "video/x-m4v",
         "video/x-msvideo",
+        "video/webm",
+    ]
+
+    # Image Upload Constraints
+    MAX_IMAGE_UPLOAD_SIZE_BYTES: int = 25 * 1024 * 1024  # 25 MB per photo
+    ALLOWED_IMAGE_EXTENSIONS: List[str] = [".jpg", ".jpeg", ".png", ".webp"]
+    ALLOWED_IMAGE_MIME_TYPES: List[str] = [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
     ]
 
     # Computer Vision & Reconstruction Settings

@@ -11,6 +11,7 @@ from app.schemas.project import MapProject, ProjectCreate, ProjectUpdate, Projec
 from app.schemas.job import ProcessingStatus
 from app.services.project_service import ProjectService
 from app.services.upload_service import UploadService
+from app.services.image_upload_service import ImageUploadService
 from app.services.job_service import JobService
 from app.services.audit_service import AuditService
 
@@ -36,6 +37,8 @@ def list_projects(
 async def create_project(
     request: Request,
     video: Optional[UploadFile] = File(default=None),
+    images: Optional[List[UploadFile]] = File(default=None),
+    photos: Optional[List[UploadFile]] = File(default=None),
     name: Optional[str] = Form(default=None),
     location: Optional[str] = Form(default="Indoor Survey Site"),
     color: Optional[str] = Form(default="blue"),
@@ -44,28 +47,72 @@ async def create_project(
 ):
     """
     Create a new project.
-    Supports both JSON payload and multipart video upload (for frontend createMapping).
+    Supports JSON payload, multipart video upload, and multipart photograph uploads.
     """
     content_type = request.headers.get("content-type", "")
 
-    # Multipart video mapping creation (as used by frontend)
+    # Multipart photograph mapping creation
+    uploaded_images = images or photos
+    if "multipart/form-data" in content_type and uploaded_images:
+        first_fname = getattr(uploaded_images[0], "filename", "") or ""
+        proj_name = str(name or (first_fname.rsplit(".", 1)[0].replace("_", " ").title() if first_fname else "Indoor Photo Survey"))
+        proj_in = ProjectCreate(name=proj_name, location=location or "Indoor Survey Site", color=color or "blue", input_type="photo")
+        project = ProjectService.create_project(db, current_user, proj_in)
+
+        try:
+            saved = ImageUploadService.validate_and_save_batch(db, project, current_user, uploaded_images)
+            job = JobService.create_and_dispatch_job(db, project, current_user, job_type="photo")
+        except ValueError as e:
+            db.delete(project)
+            db.commit()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        except Exception as e:
+            db.delete(project)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to process photograph upload: {str(e)}",
+            )
+
+        AuditService.log(
+            db,
+            action="create_mapping_with_photos",
+            user_id=current_user.id,
+            project_id=project.id,
+            details=f"Uploaded {len(saved)} photos and queued job {job.id}",
+        )
+        return {"id": project.id, "status": project.status}
+
+    # Multipart video mapping creation (as used by frontend createMapping)
     if "multipart/form-data" in content_type and video is not None:
-        proj_name = name or (video.filename.rsplit(".", 1)[0].replace("_", " ").title() if video.filename else "Indoor Mapping")
-        proj_in = ProjectCreate(name=proj_name, location=location, color=color)
+        filename = getattr(video, "filename", "") or ""
+        proj_name = str(name or (filename.rsplit(".", 1)[0].replace("_", " ").title() if filename else "Indoor Mapping"))
+        proj_in = ProjectCreate(name=proj_name, location=location or "Indoor Survey Site", color=color or "blue", input_type="video")
         project = ProjectService.create_project(db, current_user, proj_in)
 
         # Process upload and queue job
-        upload = UploadService.validate_and_save_upload(db, project, current_user, video)
-        job = JobService.create_and_dispatch_job(db, project, current_user, upload.id)
+        try:
+            upload = UploadService.validate_and_save_upload(db, project, current_user, video)
+            job = JobService.create_and_dispatch_job(db, project, current_user, upload.id, job_type="video")
+        except ValueError as e:
+            db.delete(project)
+            db.commit()
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+        except Exception as e:
+            db.delete(project)
+            db.commit()
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to process video upload: {str(e)}",
+            )
 
         AuditService.log(
             db,
             action="create_mapping_with_video",
             user_id=current_user.id,
             project_id=project.id,
-            details=f"Uploaded {video.filename} and queued job {job.id}",
+            details=f"Uploaded {filename} and queued job {job.id}",
         )
-        # Frontend expects { id, status }
         return {"id": project.id, "status": project.status}
 
     # Standard JSON body request
@@ -76,6 +123,14 @@ async def create_project(
         proj_in = ProjectCreate(name=name or "New Indoor Project", location=location, color=color)
 
     project = ProjectService.create_project(db, current_user, proj_in)
+    AuditService.log(
+        db,
+        action="create_project",
+        user_id=current_user.id,
+        project_id=project.id,
+        details=f"Created project {project.name}",
+    )
+    return project
     AuditService.log(
         db,
         action="create_project",

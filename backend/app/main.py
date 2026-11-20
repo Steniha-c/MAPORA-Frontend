@@ -1,6 +1,7 @@
 """MAPORA Backend FastAPI Application."""
 
 from contextlib import asynccontextmanager
+import os
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -21,22 +22,44 @@ async def lifespan(app: FastAPI):
     """Application startup and shutdown events."""
     logger.info(f"Starting {settings.APP_NAME} in [{settings.ENVIRONMENT}] mode.")
 
-    # Automatically create tables if using SQLite or fresh database
-    Base.metadata.create_all(bind=engine)
+    is_testing = os.environ.get("ENVIRONMENT") == "testing" or settings.ENVIRONMENT == "testing"
 
-    # Seed initial administrator account if configured
-    db = SessionLocal()
-    try:
-        admin = AuthService.seed_initial_admin(db)
-        if admin:
-            logger.info(f"Initial administrator account seeded: {admin.email}")
-    finally:
-        db.close()
+    if not is_testing:
+        # Automatically create tables if using SQLite or fresh database
+        Base.metadata.create_all(bind=engine)
+
+        # Ensure added columns exist on existing SQLite databases
+        with engine.begin() as conn:
+            try:
+                cursor = conn.exec_driver_sql("PRAGMA table_info(projects)")
+                cols = [row[1] for row in cursor.fetchall()]
+                if cols and "input_type" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE projects ADD COLUMN input_type VARCHAR(50) DEFAULT 'video'")
+            except Exception:
+                pass
+
+            try:
+                cursor = conn.exec_driver_sql("PRAGMA table_info(reconstruction_jobs)")
+                cols = [row[1] for row in cursor.fetchall()]
+                if cols and "job_type" not in cols:
+                    conn.exec_driver_sql("ALTER TABLE reconstruction_jobs ADD COLUMN job_type VARCHAR(50) DEFAULT 'video'")
+            except Exception:
+                pass
+
+        # Seed initial administrator account if configured
+        db = SessionLocal()
+        try:
+            admin = AuthService.seed_initial_admin(db)
+            if admin:
+                logger.info(f"Initial administrator account seeded: {admin.email}")
+        finally:
+            db.close()
 
     yield
 
     logger.info("Shutting down MAPORA backend...")
-    engine.dispose()
+    if not is_testing:
+        engine.dispose()
 
 
 app = FastAPI(
@@ -54,19 +77,27 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 # CORS Middleware configured strictly by environment
+cors_origin_regex = (
+    r"^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$" if settings.DEBUG else None
+)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Mount API routers
 # 1. Standard versioned endpoints under /api/v1
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)
 
-# 2. Root-level alias router for direct frontend compatibility without /api/v1 prefix
+# 2. Mount under /api prefix for proxy compatibility
+app.include_router(api_router, prefix="/api")
+
+# 3. Root-level alias router for direct frontend compatibility without /api/v1 prefix
 app.include_router(api_router)
 
 

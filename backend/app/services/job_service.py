@@ -1,18 +1,33 @@
 """Reconstruction job management service."""
 
 from datetime import datetime, timezone
+import socket
 import threading
 from typing import Optional
+from urllib.parse import urlparse
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.job import ReconstructionJob
 from app.models.project import Project
-from app.models.upload import VideoUpload
+from app.models.upload import VideoUpload, ImageUpload
 from app.models.user import User
 from app.schemas.job import ProcessingStatus
-from app.workers.tasks import process_reconstruction_task
+from app.workers.tasks import process_reconstruction_task, process_image_reconstruction_task
 from app.core.logging import logger
+
+
+def _is_celery_broker_reachable(broker_url: str, timeout: float = 0.2) -> bool:
+    """Fast probe to check whether Celery broker (Redis/RabbitMQ) is actively listening."""
+    try:
+        parsed = urlparse(broker_url)
+        host = parsed.hostname or "127.0.0.1"
+        port = parsed.port or 6379
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except Exception:
+        return False
 
 
 class JobService:
@@ -24,6 +39,7 @@ class JobService:
         project: Project,
         user: User,
         upload_id: Optional[str] = None,
+        job_type: str = "video",
     ) -> ReconstructionJob:
         # Check if an existing job is actively processing
         existing = db.scalar(
@@ -35,25 +51,31 @@ class JobService:
         if existing:
             return existing
 
-        # If upload_id not provided, pick latest upload
-        if not upload_id:
-            latest_upload = db.scalar(
-                select(VideoUpload)
-                .where(VideoUpload.project_id == project.id)
-                .order_by(desc(VideoUpload.created_at))
-            )
-            if not latest_upload:
-                raise ValueError("Cannot start reconstruction job without an uploaded video.")
-            upload_id = latest_upload.id
+        if job_type == "photo":
+            images = list(db.scalars(select(ImageUpload).where(ImageUpload.project_id == project.id)).all())
+            if not images:
+                raise ValueError("Cannot start photograph reconstruction job without uploaded photographs.")
+        else:
+            # If upload_id not provided, pick latest video upload
+            if not upload_id:
+                latest_upload = db.scalar(
+                    select(VideoUpload)
+                    .where(VideoUpload.project_id == project.id)
+                    .order_by(desc(VideoUpload.created_at))
+                )
+                if not latest_upload:
+                    raise ValueError("Cannot start reconstruction job without an uploaded video.")
+                upload_id = latest_upload.id
 
         job = ReconstructionJob(
             project_id=project.id,
             user_id=user.id,
             upload_id=upload_id,
+            job_type=job_type,
             stage="queued",
             status="queued",
             progress=0.0,
-            message="Job queued for processing...",
+            message=f"{'Photograph' if job_type == 'photo' else 'Video'} job queued for processing...",
             retry_count=0,
         )
         db.add(job)
@@ -61,21 +83,38 @@ class JobService:
         db.commit()
         db.refresh(job)
 
-        # Dispatch to Celery background worker
-        try:
-            task = process_reconstruction_task.delay(job.id)
-            job.celery_task_id = task.id
+        task_func = process_image_reconstruction_task if job_type == "photo" else process_reconstruction_task
+        broker_url = settings.CELERY_BROKER_URL or settings.REDIS_URL
+        dispatched_to_celery = False
+
+        if _is_celery_broker_reachable(broker_url, timeout=0.2):
+            try:
+                task = task_func.apply_async(args=[job.id], retry=False)
+                job.celery_task_id = task.id
+                db.commit()
+                db.refresh(job)
+                dispatched_to_celery = True
+                logger.info(f"Dispatched {job_type} job {job.id} to Celery worker (task_id: {task.id})")
+            except Exception as e:
+                logger.warning(
+                    f"Celery dispatch failed despite open broker port ({e}). Falling back to local thread."
+                )
+
+        if not dispatched_to_celery:
+            logger.info(
+                f"Celery broker not running. Running {job_type} job {job.id} in background thread for local development."
+            )
+            job.celery_task_id = f"local-{job.id[:8]}"
             db.commit()
             db.refresh(job)
-        except Exception as e:
-            logger.warning(
-                f"Celery broker unreachable ({e}). Running processing task in background thread for local development."
-            )
-            # Resilient background thread fallback for local dev when Redis is not started
-            def run_sync():
-                process_reconstruction_task(job.id)
 
-            t = threading.Thread(target=run_sync, daemon=True)
+            def run_sync():
+                try:
+                    task_func(job.id)
+                except Exception as exc:
+                    logger.exception(f"Background {job_type} reconstruction task {job.id} encountered an error: {exc}")
+
+            t = threading.Thread(target=run_sync, daemon=True, name=f"recon-{job.id[:8]}")
             t.start()
 
         return job
@@ -141,5 +180,10 @@ class JobService:
             .order_by(desc(ReconstructionJob.created_at))
         )
 
+        job_type = (
+            latest_job.job_type
+            if latest_job and hasattr(latest_job, "job_type") and latest_job.job_type
+            else ("photo" if getattr(project, "input_type", "video") == "photo" else "video")
+        )
         upload_id = latest_job.upload_id if latest_job else None
-        return JobService.create_and_dispatch_job(db, project, user, upload_id=upload_id)
+        return JobService.create_and_dispatch_job(db, project, user, upload_id=upload_id, job_type=job_type)

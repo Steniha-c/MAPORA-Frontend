@@ -44,6 +44,39 @@ class FloorPlanWall(BaseModel):
     )
 
 
+class ConnectivityNode(BaseModel):
+    id: str
+    name: str
+    center: Point2D
+
+
+class ConnectivityEdge(BaseModel):
+    from_room_id: str = Field(alias="fromRoomId")
+    to_room_id: str = Field(alias="toRoomId")
+    door_id: Optional[str] = Field(default=None, alias="doorId")
+    distance_meters: float = Field(alias="distanceMeters")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class PathwayItem(BaseModel):
+    id: str
+    from_room_id: str = Field(alias="fromRoomId")
+    to_room_id: str = Field(alias="toRoomId")
+    waypoints: List[Point2D]
+    length_meters: float = Field(alias="lengthMeters")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
+class ConnectivityGraph(BaseModel):
+    nodes: List[ConnectivityNode] = Field(default_factory=list)
+    edges: List[ConnectivityEdge] = Field(default_factory=list)
+    disconnected_rooms: List[str] = Field(default_factory=list, alias="disconnectedRooms")
+
+    model_config = ConfigDict(populate_by_name=True)
+
+
 class FloorPlanModel(BaseModel):
     """2D Floor Plan model strictly matching frontend FloorPlanModel."""
     coordinate_system: str = Field(default="normalized-cartesian-2d", alias="coordinateSystem")
@@ -51,6 +84,8 @@ class FloorPlanModel(BaseModel):
     measurements_available: bool = Field(default=True, alias="measurementsAvailable")
     rooms: List[FloorPlanRoom] = Field(default_factory=list)
     walls: List[FloorPlanWall] = Field(default_factory=list)
+    connectivity_graph: Optional[ConnectivityGraph] = Field(default=None, alias="connectivityGraph")
+    pathways: Optional[List[PathwayItem]] = Field(default=None)
 
     model_config = ConfigDict(
         from_attributes=True,

@@ -33,3 +33,31 @@ class UploadResponse(BaseModel):
     project_id: Optional[str] = Field(default=None, alias="projectId")
 
     model_config = ConfigDict(populate_by_name=True)
+
+
+class ImageUploadRead(BaseModel):
+    """Schema for uploaded photograph details."""
+    id: str
+    project_id: str = Field(alias="projectId")
+    original_filename: str = Field(alias="originalFilename")
+    file_size_bytes: int = Field(alias="fileSizeBytes")
+    mime_type: str = Field(alias="mimeType")
+    width: Optional[int] = None
+    height: Optional[int] = None
+    order_index: int = Field(default=0, alias="orderIndex")
+    status: str
+    created_at: datetime = Field(alias="createdAt")
+
+    model_config = ConfigDict(
+        from_attributes=True,
+        populate_by_name=True,
+    )
+
+
+class BatchImageUploadResponse(BaseModel):
+    """Batch upload acknowledgement for photos."""
+    uploaded: int
+    images: list[ImageUploadRead]
+    project_id: str = Field(alias="projectId")
+
+    model_config = ConfigDict(populate_by_name=True)

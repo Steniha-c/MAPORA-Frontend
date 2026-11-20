@@ -40,6 +40,7 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Malformed token credentials.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     user = AuthService.get_by_id(db, user_id)
@@ -47,6 +48,7 @@ def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User account is inactive or no longer exists.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
     return user

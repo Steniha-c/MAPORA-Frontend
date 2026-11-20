@@ -37,6 +37,7 @@ class ReconstructionJob(Base, TimestampMixin):
 
     # High level statuses: queued | processing | completed | failed | cancelled
     status: Mapped[str] = mapped_column(String(50), default="queued", nullable=False)
+    job_type: Mapped[str] = mapped_column(String(50), default="video", nullable=False)
 
     progress: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
     message: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)

@@ -50,6 +50,7 @@ def download_export_direct(
         "dxf": "application/dxf",
         "glb": "model/gltf-binary",
         "gltf": "model/gltf-binary",
+        "obj": "text/plain",
     }
     media_type = media_types.get(format.lower(), "application/octet-stream")
 

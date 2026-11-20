@@ -6,15 +6,32 @@ import { useAuth } from '../auth/AuthContext';
 export function useProjects() {
   const { session } = useAuth();
   const [projects, setProjects] = useState<MapProject[]>(isApiConfigured ? [] : SAMPLE_PROJECTS);
-  const [loading, setLoading] = useState(isApiConfigured);
+  const [loading, setLoading] = useState(isApiConfigured && Boolean(session?.accessToken));
   const [error, setError] = useState('');
   const refresh = useCallback(async () => {
-    if (!isApiConfigured) { setProjects(SAMPLE_PROJECTS); setError(''); setLoading(false); return; }
-    setLoading(true); setError('');
-    try { setProjects(await maporaApi.listProjects(session?.accessToken)); }
-    catch (cause) { setProjects([]); setError(cause instanceof Error ? cause.message : 'Projects could not be loaded.'); }
-    finally { setLoading(false); }
-  }, [session]);
+    if (!isApiConfigured) {
+      setProjects(SAMPLE_PROJECTS);
+      setError('');
+      setLoading(false);
+      return;
+    }
+    if (!session?.accessToken) {
+      setProjects([]);
+      setError('');
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      setProjects(await maporaApi.listProjects(session.accessToken));
+    } catch (cause) {
+      setProjects([]);
+      setError(cause instanceof Error ? cause.message : 'Projects could not be loaded.');
+    } finally {
+      setLoading(false);
+    }
+  }, [session?.accessToken]);
   useEffect(() => { void refresh(); }, [refresh]);
   return { projects, loading, error, refresh, isDemo: !isApiConfigured, isApiConfigured };
 }

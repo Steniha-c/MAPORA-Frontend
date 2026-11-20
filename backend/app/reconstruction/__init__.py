@@ -8,6 +8,11 @@ from app.reconstruction.spatial import reconstruct_point_cloud, PointCloudResult
 from app.reconstruction.floor_plan_gen import generate_floor_plan_from_point_cloud, GeneratedFloorPlan
 from app.reconstruction.model_3d_gen import generate_3d_model_from_floor_plan, GeneratedModel3D
 from app.reconstruction.pipeline import SpatialReconstructionPipeline, PipelineOutput
+from app.reconstruction.image_pipeline import (
+    ImageReconstructionPipeline,
+    ImagePipelineOutput,
+    InsufficientOverlapError,
+)
 
 __all__ = [
     "process_video_keyframes",
@@ -27,4 +32,7 @@ __all__ = [
     "GeneratedModel3D",
     "SpatialReconstructionPipeline",
     "PipelineOutput",
+    "ImageReconstructionPipeline",
+    "ImagePipelineOutput",
+    "InsufficientOverlapError",
 ]

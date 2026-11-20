@@ -1,54 +1,133 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
-import { maporaApi } from '../services/api';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  getStoredSession,
+  isTokenExpired,
+  maporaApi,
+  refreshAccessToken,
+  storeSession,
+} from '../services/api';
 import type { AuthSession } from '../types';
 
 interface AuthContextValue {
   session: AuthSession | null;
   isAuthenticated: boolean;
+  sessionExpiredMessage: string | null;
+  clearSessionExpiredMessage: () => void;
   signIn: (email: string, password: string) => Promise<AuthSession>;
-  signOut: () => void;
+  signOut: () => Promise<void>;
+  refresh: () => Promise<string | null>;
 }
-
-const STORAGE_KEY = 'mapora_auth_session';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<AuthSession | null>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (!saved) return null;
-      const parsed = JSON.parse(saved) as AuthSession;
-      if (parsed?.accessToken && parsed?.user?.id) {
-        return parsed;
-      }
-      return null;
-    } catch {
+    const stored = getStoredSession();
+    if (!stored) return null;
+
+    // If access token is expired and there is no refresh token, clear immediately
+    if (isTokenExpired(stored.accessToken) && !stored.refreshToken) {
+      storeSession(null);
       return null;
     }
+    return stored;
   });
 
-  const value = useMemo<AuthContextValue>(() => ({
-    session,
-    isAuthenticated: Boolean(session),
-    async signIn(email, password) {
-      const result = await maporaApi.login(email, password);
-      if (!result.accessToken || !result.user?.id || !['admin', 'surveyor'].includes(result.user.role)) {
-        throw new Error('The authentication service returned an incomplete or unsupported session.');
-      }
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(result));
-      } catch { /* Ignore storage errors */ }
-      setSession(result);
-      return result;
-    },
-    signOut() {
-      try {
-        localStorage.removeItem(STORAGE_KEY);
-      } catch { /* Ignore storage errors */ }
+  const [sessionExpiredMessage, setSessionExpiredMessage] = useState<string | null>(null);
+
+  const clearSessionExpiredMessage = useCallback(() => {
+    setSessionExpiredMessage(null);
+  }, []);
+
+  const refresh = useCallback(async (): Promise<string | null> => {
+    const token = await refreshAccessToken();
+    if (!token) {
       setSession(null);
-    },
-  }), [session]);
+      setSessionExpiredMessage('Your session has expired. Please sign in again.');
+      return null;
+    }
+    const updated = getStoredSession();
+    setSession(updated);
+    setSessionExpiredMessage(null);
+    return token;
+  }, []);
+
+  // Listen to cross-cutting session events dispatched from api.ts
+  useEffect(() => {
+    // If mounted with an expired access token, proactively refresh using refresh token
+    const initial = getStoredSession();
+    if (initial?.accessToken && isTokenExpired(initial.accessToken) && initial.refreshToken) {
+      void refreshAccessToken().then((token) => {
+        if (!token) {
+          setSession(null);
+          setSessionExpiredMessage('Your session has expired. Please sign in again.');
+        } else {
+          setSession(getStoredSession());
+          setSessionExpiredMessage(null);
+        }
+      });
+    }
+
+    const handleRefreshed = (event: Event) => {
+      const customEvent = event as CustomEvent<AuthSession>;
+      if (customEvent.detail) {
+        setSession(customEvent.detail);
+        setSessionExpiredMessage(null);
+      }
+    };
+
+    const handleExpired = (event: Event) => {
+      const customEvent = event as CustomEvent<{ message?: string }>;
+      setSession(null);
+      setSessionExpiredMessage(customEvent.detail?.message || 'Your session has expired. Please sign in again.');
+    };
+
+    window.addEventListener('mapora:session-refreshed', handleRefreshed);
+    window.addEventListener('mapora:session-expired', handleExpired);
+
+    return () => {
+      window.removeEventListener('mapora:session-refreshed', handleRefreshed);
+      window.removeEventListener('mapora:session-expired', handleExpired);
+    };
+  }, []);
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      session,
+      isAuthenticated: Boolean(session && !isTokenExpired(session.accessToken, -300)), // active within grace period
+      sessionExpiredMessage,
+      clearSessionExpiredMessage,
+      async signIn(email, password) {
+        const result = await maporaApi.login(email, password);
+        if (!result.accessToken || !result.user?.id || !['admin', 'surveyor'].includes(result.user.role)) {
+          throw new Error('The authentication service returned an incomplete or unsupported session.');
+        }
+        storeSession(result);
+        setSession(result);
+        setSessionExpiredMessage(null);
+        return result;
+      },
+      async signOut() {
+        const current = getStoredSession();
+        storeSession(null);
+        setSession(null);
+        setSessionExpiredMessage(null);
+        if (current?.refreshToken) {
+          await maporaApi.logout(current.refreshToken, current.accessToken);
+        }
+      },
+      refresh,
+    }),
+    [session, sessionExpiredMessage, clearSessionExpiredMessage, refresh],
+  );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

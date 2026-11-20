@@ -5,7 +5,7 @@ from app.models.user import User
 from app.models.token import RefreshToken
 from app.models.project import Project
 from app.models.version import ProjectVersion
-from app.models.upload import VideoUpload
+from app.models.upload import VideoUpload, ImageUpload
 from app.models.job import ReconstructionJob
 from app.models.geometry import FloorPlan, Room, Wall, DoorWindow, NavigationPath, Model3D
 from app.models.export import ExportRecord
@@ -18,6 +18,7 @@ __all__ = [
     "Project",
     "ProjectVersion",
     "VideoUpload",
+    "ImageUpload",
     "ReconstructionJob",
     "FloorPlan",
     "Room",

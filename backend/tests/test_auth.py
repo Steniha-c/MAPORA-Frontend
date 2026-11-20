@@ -84,3 +84,37 @@ def test_auth_me_protected(client: TestClient, surveyor_token):
     # Unauthorized without header
     unauth_response = client.get("/api/v1/auth/me")
     assert unauth_response.status_code == 401
+
+
+def test_expired_access_token_rejected(client: TestClient, surveyor_user):
+    from datetime import timedelta
+    from app.core.security import create_access_token
+
+    # Create an expired token (expired 10 seconds ago)
+    expired_token = create_access_token(
+        subject=surveyor_user.id,
+        email=surveyor_user.email,
+        role=surveyor_user.role,
+        expires_delta=timedelta(seconds=-10),
+    )
+
+    response = client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {expired_token}"})
+    assert response.status_code == 401
+    assert "invalid or expired access token" in response.json()["detail"].lower()
+    assert "Bearer" in response.headers.get("WWW-Authenticate", "")
+
+
+def test_malformed_access_token_rejected(client: TestClient):
+    response = client.get("/api/v1/auth/me", headers={"Authorization": "Bearer not-a-valid-jwt-token"})
+    assert response.status_code == 401
+    assert "invalid or expired access token" in response.json()["detail"].lower()
+
+
+def test_invalid_refresh_token_rejected(client: TestClient):
+    response = client.post(
+        "/api/v1/auth/refresh",
+        json={"refreshToken": "completely_bogus_refresh_token_string"},
+    )
+    assert response.status_code == 401
+    assert "invalid or expired refresh token" in response.json()["detail"].lower()
+

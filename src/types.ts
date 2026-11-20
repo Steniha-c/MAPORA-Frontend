@@ -2,15 +2,28 @@ export type UserRole = 'admin' | 'surveyor';
 export type ProjectStatus = 'Ready' | 'Processing' | 'Needs attention';
 export type JobStatus = 'queued' | 'processing' | 'completed' | 'failed' | 'unknown';
 export interface UserIdentity { id: string; email: string; role: UserRole; }
-export interface AuthSession { accessToken: string; user: UserIdentity; }
-export interface MapProject { id: string; name: string; location: string; createdAt: string; updatedAt?: string; status: ProjectStatus; rooms: number; duration: string; color: string; versionCount?: number; }
+export interface AuthSession { accessToken: string; refreshToken?: string; tokenType?: string; user: UserIdentity; }
+export interface MapProject { id: string; name: string; location: string; createdAt: string; updatedAt?: string; status: ProjectStatus; rooms: number; duration: string; color: string; versionCount?: number; inputType?: 'video' | 'photo'; imageCount?: number; }
+export interface ImageUploadItem { id: string; projectId: string; originalFilename: string; fileSizeBytes: number; mimeType: string; width?: number; height?: number; orderIndex?: number; status: string; createdAt: string; }
 export interface ProcessingStatus { projectId: string; stage: string; status: JobStatus; progress?: number; message?: string; updatedAt?: string; }
 export interface ProjectVersion { id: string; version: number; createdAt: string; description?: string; status: string; }
 export interface AdminJob { id: string; projectId: string; projectName: string; stage: string; status: JobStatus; updatedAt: string; durationSeconds?: number; message?: string; }
 export interface AdminAnalytics { projectCount: number; userCount: number; jobsRunning: number; jobsFailed: number; jobsCompleted?: number; averageProcessingSeconds?: number; reconstructionsCompleted?: number; roomsDetected?: number; averageGeometryConfidence?: number; updatedAt: string; recentJobs?: AdminJob[]; }
 export interface FloorPlanRoom { id: string; name: string; bounds: { x: number; y: number; width: number; height: number }; areaSquareMeters?: number; }
 export interface FloorPlanWall { id: string; start: { x: number; y: number }; end: { x: number; y: number }; kind: 'wall' | 'door'; }
-export interface FloorPlanModel { coordinateSystem: string; units: string; measurementsAvailable: boolean; rooms: FloorPlanRoom[]; walls: FloorPlanWall[]; }
+export interface ConnectivityNode { id: string; name: string; center: { x: number; y: number }; }
+export interface ConnectivityEdge { fromRoomId: string; toRoomId: string; doorId?: string; distanceMeters: number; }
+export interface ConnectivityGraph { nodes: ConnectivityNode[]; edges: ConnectivityEdge[]; disconnectedRooms?: string[]; }
+export interface PathwayItem { id: string; fromRoomId: string; toRoomId: string; waypoints: Array<{ x: number; y: number }>; lengthMeters: number; }
+export interface FloorPlanModel {
+  coordinateSystem: string;
+  units: string;
+  measurementsAvailable: boolean;
+  rooms: FloorPlanRoom[];
+  walls: FloorPlanWall[];
+  connectivityGraph?: ConnectivityGraph;
+  pathways?: PathwayItem[];
+}
 
 // Explicitly illustrative records; no backend or user data exists in this repository.
 export const SAMPLE_PROJECTS: MapProject[] = [

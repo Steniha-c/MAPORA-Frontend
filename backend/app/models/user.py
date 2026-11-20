@@ -10,7 +10,7 @@ from app.core.security import UserRole
 if TYPE_CHECKING:
     from app.models.token import RefreshToken
     from app.models.project import Project
-    from app.models.upload import VideoUpload
+    from app.models.upload import VideoUpload, ImageUpload
     from app.models.job import ReconstructionJob
     from app.models.export import ExportRecord
 
@@ -35,6 +35,9 @@ class User(Base, TimestampMixin):
     )
     uploads: Mapped[List["VideoUpload"]] = relationship(
         "VideoUpload", back_populates="user", cascade="all, delete-orphan"
+    )
+    image_uploads: Mapped[List["ImageUpload"]] = relationship(
+        "ImageUpload", back_populates="user", cascade="all, delete-orphan"
     )
     jobs: Mapped[List["ReconstructionJob"]] = relationship(
         "ReconstructionJob", back_populates="user", cascade="all, delete-orphan"

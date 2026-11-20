@@ -9,7 +9,7 @@ from app.db.base import Base, TimestampMixin, generate_uuid
 if TYPE_CHECKING:
     from app.models.user import User
     from app.models.version import ProjectVersion
-    from app.models.upload import VideoUpload
+    from app.models.upload import VideoUpload, ImageUpload
     from app.models.job import ReconstructionJob
     from app.models.geometry import FloorPlan, Model3D
     from app.models.export import ExportRecord
@@ -28,6 +28,7 @@ class Project(Base, TimestampMixin):
     duration: Mapped[str] = mapped_column(String(50), default="00:00", nullable=False)
     color: Mapped[str] = mapped_column(String(50), default="blue", nullable=False)
     version_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    input_type: Mapped[str] = mapped_column(String(50), default="video", nullable=False)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     user_id: Mapped[str] = mapped_column(
@@ -41,6 +42,9 @@ class Project(Base, TimestampMixin):
     )
     uploads: Mapped[List["VideoUpload"]] = relationship(
         "VideoUpload", back_populates="project", cascade="all, delete-orphan"
+    )
+    image_uploads: Mapped[List["ImageUpload"]] = relationship(
+        "ImageUpload", back_populates="project", cascade="all, delete-orphan", order_by="ImageUpload.order_index.asc()"
     )
     jobs: Mapped[List["ReconstructionJob"]] = relationship(
         "ReconstructionJob", back_populates="project", cascade="all, delete-orphan", order_by="ReconstructionJob.created_at.desc()"

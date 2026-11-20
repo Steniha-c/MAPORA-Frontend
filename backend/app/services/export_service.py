@@ -85,8 +85,22 @@ class ExportService:
                 file_bytes = f.read()
             mime_type = "model/gltf-binary"
             ext = "glb"
+        elif fmt == "obj":
+            model = db.scalar(
+                select(Model3D).where(Model3D.project_id == project.id).order_by(Model3D.created_at.desc())
+            )
+            if not model:
+                raise ValueError("No 3D model has been generated for this project yet.")
+            with storage.open(model.storage_key) as f:
+                glb_content = f.read()
+            import trimesh
+            loaded_scene = trimesh.load(io.BytesIO(glb_content), file_type="glb")
+            obj_data = loaded_scene.export(file_type="obj")
+            file_bytes = obj_data.encode("utf-8") if isinstance(obj_data, str) else obj_data
+            mime_type = "text/plain"
+            ext = "obj"
         else:
-            raise ValueError(f"Unsupported export format '{export_format}'. Supported: svg, pdf, dxf, glb.")
+            raise ValueError(f"Unsupported export format '{export_format}'. Supported: svg, pdf, dxf, glb, obj.")
 
         filename = f"{project.name.replace(' ', '_').lower()}_{fmt}.{ext}"
         storage_key = f"exports/{project.id}/{uuid.uuid4().hex}_{filename}"

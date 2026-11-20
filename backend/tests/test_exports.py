@@ -64,3 +64,50 @@ def test_export_empty_project_error(client: TestClient, db, surveyor_user, surve
     )
     assert res.status_code == 400
     assert "no active floor plan available" in res.json()["detail"].lower()
+
+
+def test_export_glb_and_obj(client: TestClient, db, surveyor_user, surveyor_token):
+    import io, trimesh
+    from app.models.geometry import Model3D
+    from app.storage.provider import get_storage
+
+    proj = Project(name="3D Pavilion", user_id=surveyor_user.id, status="Ready")
+    db.add(proj)
+    db.commit()
+
+    plan = FloorPlan(project_id=proj.id, coordinate_system="normalized-cartesian-2d", units="meters", is_active=True)
+    db.add(plan)
+    db.commit()
+
+    box = trimesh.creation.box()
+    glb_bytes = trimesh.exchange.gltf.export_glb(box)
+    storage = get_storage()
+    storage_key = f"models/{proj.id}/scene.glb"
+    storage.save(io.BytesIO(glb_bytes), storage_key, content_type="model/gltf-binary")
+
+    model = Model3D(
+        project_id=proj.id,
+        storage_key=storage_key,
+        vertex_count=len(box.vertices),
+        face_count=len(box.faces),
+        format="glb",
+    )
+    db.add(model)
+    db.commit()
+
+    # Test GLB export
+    glb_res = client.get(
+        f"/api/v1/projects/{proj.id}/export?format=glb",
+        headers={"Authorization": f"Bearer {surveyor_token}"},
+    )
+    assert glb_res.status_code == 200
+    assert len(glb_res.content) > 100
+
+    # Test OBJ export
+    obj_res = client.get(
+        f"/api/v1/projects/{proj.id}/export?format=obj",
+        headers={"Authorization": f"Bearer {surveyor_token}"},
+    )
+    assert obj_res.status_code == 200
+    assert b"v " in obj_res.content or b"vn " in obj_res.content
+

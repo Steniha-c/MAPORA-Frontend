@@ -43,3 +43,31 @@ class VideoUpload(Base, TimestampMixin):
     jobs: Mapped[list["ReconstructionJob"]] = relationship(
         "ReconstructionJob", back_populates="upload"
     )
+
+
+class ImageUpload(Base, TimestampMixin):
+    """Uploaded photograph metadata and storage mapping for multi-photo spatial reconstruction."""
+
+    __tablename__ = "image_uploads"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    project_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("projects.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
+    )
+    original_filename: Mapped[str] = mapped_column(String(255), nullable=False)
+    storage_key: Mapped[str] = mapped_column(String(512), unique=True, nullable=False)
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    file_size_bytes: Mapped[int] = mapped_column(BigInteger, nullable=False)
+
+    # Image properties
+    width: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    height: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    order_index: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    status: Mapped[str] = mapped_column(String(50), default="uploaded", nullable=False)
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project", back_populates="image_uploads")
+    user: Mapped["User"] = relationship("User", back_populates="image_uploads")
