@@ -150,4 +150,3 @@ em { color: var(--orange); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; }
 }
-
